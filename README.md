@@ -11,7 +11,7 @@ https://USERNAME.github.io/REPO-NAME/   (if file is named index.html)
 ## ⚙️ Configure
 1) In `index.html`, replace:
 ```
-const API_URL = '<<PUT_WEB_APP_URL_HERE>>';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwIB4y8a16zqKdfzq4FUvupwXmQynSupQU-Fk-ybHnDQIWKFfZR7JcYPhNY8ZxXDZKS/exec';
 ```
 with your Apps Script Web App URL (Deploy `BookingAPI.gs` → Web App).
 
