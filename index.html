@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>จองที่พัก | SW.BERNHARDT HOUSE</title>
+<style>
+  :root{--gap:12px}
+  body{font-family:system-ui,Arial,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;background:#fafafa;color:#222}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  h1{margin:0;font-size:24px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px}
+  label{display:block;margin:10px 0 4px;font-weight:600}
+  input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  button{margin-top:14px;padding:12px 16px;border:0;border-radius:10px;cursor:pointer;background:#1a73e8;color:#fff;font-weight:700}
+  .ok{background:#e6f4ea;border:1px solid #a8dab5;color:#196127;padding:10px;border-radius:10px;margin:12px 0;display:none}
+  .err{background:#fdecea;border:1px solid #f5c2c0;color:#b00020;padding:10px;border-radius:10px;margin:12px 0;display:none}
+  footer{margin:24px 0;color:#6b7280;font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+  <header>
+    <h1>จองที่พัก | SW.BERNHARDT HOUSE</h1>
+    <div id="status" style="font-size:12px;color:#6b7280"></div>
+  </header>
+
+  <div class="card">
+    <div id="ok" class="ok"></div>
+    <div id="err" class="err"></div>
+
+    <form id="f" novalidate>
+      <label>ชื่อ-นามสกุล *</label>
+      <input name="name" required>
+
+      <label>อีเมล *</label>
+      <input type="email" name="email" required>
+
+      <label>โทรศัพท์</label>
+      <input name="phone">
+
+      <div class="row">
+        <div>
+          <label>เช็คอิน *</label>
+          <input type="date" name="checkin" required>
+        </div>
+        <div>
+          <label>เช็คเอาท์ *</label>
+          <input type="date" name="checkout" required>
+        </div>
+      </div>
+
+      <label>ห้อง/ประเภท *</label>
+      <select name="room" required>
+        <option value="">-- เลือก --</option>
+        <option>Standard A</option>
+        <option>Standard B</option>
+        <option>Deluxe</option>
+        <option>Family</option>
+      </select>
+
+      <label>ที่อยู่ (สำหรับออกใบเสร็จ)</label>
+      <textarea name="address" rows="3"></textarea>
+
+      <label>หมายเหตุ</label>
+      <textarea name="notes" rows="3"></textarea>
+
+      <label>ภาษาอีเมลตอบรับ</label>
+      <select name="lang">
+        <option value="th">ไทย (TH)</option>
+        <option value="en">English (EN)</option>
+      </select>
+
+      <button type="submit">ส่งคำขอจอง</button>
+    </form>
+  </div>
+
+  <footer>
+    © <span id="y"></span> SW.BERNHARDT HOUSE · Powered by GitHub Pages & Google Apps Script
+  </footer>
+
+<script>
+  // 🔧 ใส่ URL ของ Web App จากการ Deploy BookingAPI.gs
+  const API_URL = ‘https://script.google.com/macros/s/AKfycbwIB4y8a16zqKdfzq4FUvupwXmQynSupQU-Fk-ybHnDQIWKFfZR7JcYPhNY8ZxXDZKS/exec';
+
+  const f = document.getElementById('f');
+  const ok = document.getElementById('ok');
+  const err = document.getElementById('err');
+  const statusEl = document.getElementById('status');
+  document.getElementById('y').textContent = new Date().getFullYear();
+
+  statusEl.textContent = (API_URL.includes('http')) ? 'API: Configured' : 'API: NOT SET';
+
+  f.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    ok.style.display = 'none';
+    err.style.display = 'none';
+
+    // basic validation
+    if (!f.checkValidity()){
+      err.textContent = 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน';
+      err.style.display = 'block';
+      return;
+    }
+
+    const data = Object.fromEntries(new FormData(f).entries());
+
+    try{
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      const j = await res.json();
+      if (j.ok){
+        ok.textContent = `ส่งคำขอสำเร็จ หมายเลข: ${j.billNo} ช่วงพัก: ${j.period}`;
+        ok.style.display = 'block';
+        f.reset();
+        window.scrollTo({top:0,behavior:'smooth'});
+      }else{
+        throw new Error(j.error || 'เกิดข้อผิดพลาด');
+      }
+    }catch(e){
+      err.textContent = 'ไม่สามารถส่งคำขอ: ' + e.message + ' (ตรวจ API_URL หรือสิทธิ์การเข้าถึง)';
+      err.style.display = 'block';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  });
+</script>
+</body>
+</html>
+
+
