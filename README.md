@@ -5,7 +5,7 @@ Static booking form for **Bernhardt Resort**, deployed on **GitHub Pages** and c
 ## 🔗 Live URL
 After enabling GitHub Pages, access:
 ```
-https://USERNAME.github.io/REPO-NAME/   (if file is named index.html)
+https://USERNAME.github.io/REPO-NAME/SW.BERNHARDT HOUSE  
 ```
 
 ## ⚙️ Configure
