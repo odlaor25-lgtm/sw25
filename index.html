@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>จองที่พัก | SW.BERNHARDT HOUSE</title>
+<title>จองที่พัก | Bernhardt Resort</title>
 <style>
   :root{--gap:12px}
   body{font-family:system-ui,Arial,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;background:#fafafa;color:#222}
@@ -17,12 +17,19 @@
   button{margin-top:14px;padding:12px 16px;border:0;border-radius:10px;cursor:pointer;background:#1a73e8;color:#fff;font-weight:700}
   .ok{background:#e6f4ea;border:1px solid #a8dab5;color:#196127;padding:10px;border-radius:10px;margin:12px 0;display:none}
   .err{background:#fdecea;border:1px solid #f5c2c0;color:#b00020;padding:10px;border-radius:10px;margin:12px 0;display:none}
-  footer{margin:24px 0;color:#6b7280;font-size:12px;text-align:center}
+  dialog{width:100%;max-width:720px;border:0;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.25)}
+  dialog::backdrop{background:rgba(0,0,0,.35)}
+  .doc{font-family:"TH Sarabun New",system-ui,Arial,sans-serif;line-height:1.5}
+  .doc h2{margin:0 0 8px}
+  .doc .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:15px}
+  .doc .box{border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:8px 0;background:#fff}
+  .doc .muted{color:#6b7280;font-size:14px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
 <body>
   <header>
-    <h1>จองที่พัก | SW.BERNHARDT HOUSE</h1>
+    <h1>จองที่พัก | Bernhardt Resort</h1>
     <div id="status" style="font-size:12px;color:#6b7280"></div>
   </header>
 
@@ -69,31 +76,83 @@
       <label>ภาษาอีเมลตอบรับ</label>
       <select name="lang">
         <option value="th">ไทย (TH)</option>
-        <option value="en">English (EN)</option>
+        <option value="en" selected>English (EN)</option>
       </select>
 
       <button type="submit">ส่งคำขอจอง</button>
     </form>
   </div>
 
-  <footer>
-    © <span id="y"></span> SW.BERNHARDT HOUSE · Powered by GitHub Pages & Google Apps Script
+  <dialog id="preview">
+    <div class="doc">
+      <h2>Reservation Confirmation</h2>
+      <div class="meta">
+        <div><b>Resort:</b> Bernhardt Resort</div>
+        <div><b>Reservation ID:</b> <span id="pv-id"></span></div>
+        <div><b>Name:</b> <span id="pv-name"></span></div>
+        <div><b>Room:</b> <span id="pv-room"></span></div>
+        <div><b>Stay:</b> <span id="pv-period"></span></div>
+        <div><b>Email:</b> <span id="pv-email"></span></div>
+        <div><b>Phone:</b> <span id="pv-phone"></span></div>
+        <div><b>Lang:</b> <span id="pv-lang"></span></div>
+      </div>
+      <div class="box">
+        <b>Invoice Address</b><br>
+        <span id="pv-address"></span>
+      </div>
+      <div class="muted">Please keep this confirmation as proof of reservation. A copy has been emailed to you. The resort has also received your booking.</div>
+
+      <div class="actions">
+        <button id="btnPrint">Print / Save as PDF</button>
+        <button id="btnDownloadHtml">Download HTML</button>
+        <button id="btnClose">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <footer style="margin:24px 0;color:#6b7280;font-size:12px;text-align:center">
+    © <span id="y"></span> Bernhardt Resort · Powered by GitHub Pages & Google Apps Script
   </footer>
 
 <script>
-  // 🔧 ใส่ URL ของ Web App จากการ Deploy BookingAPI.gs
-  const API_URL = ‘https://script.google.com/macros/s/AKfycbwIB4y8a16zqKdfzq4FUvupwXmQynSupQU-Fk-ybHnDQIWKFfZR7JcYPhNY8ZxXDZKS/exec';
+  // 🔧 ใส่ URL ของ Web App จากการ Deploy BookingAPI.gs (รุ่นใหม่ที่รองรับ GET/POST)
+  const API_URL = '<<PUT_WEB_APP_URL_HERE>>';
 
   const f = document.getElementById('f');
   const ok = document.getElementById('ok');
   const err = document.getElementById('err');
   const statusEl = document.getElementById('status');
-  document.getElementById('y').textContent = new Date().getFullYear();
+  const yEl = document.getElementById('y'); yEl.textContent = new Date().getFullYear();
 
-  statusEl.textContent = (API_URL.includes('http')) ? 'API: Configured' : 'API: NOT SET';
+  const dlg = document.getElementById('preview');
+  const pv = {
+    id: document.getElementById('pv-id'),
+    name: document.getElementById('pv-name'),
+    room: document.getElementById('pv-room'),
+    period: document.getElementById('pv-period'),
+    email: document.getElementById('pv-email'),
+    phone: document.getElementById('pv-phone'),
+    lang: document.getElementById('pv-lang'),
+    address: document.getElementById('pv-address')
+  };
 
-  f.addEventListener('submit', async (e)=>{
-    e.preventDefault();
+  statusEl.textContent = (API_URL && API_URL.startsWith('http')) ? 'API: Configured' : 'API: NOT SET';
+
+  function fillFormFromURL(){
+    const u = new URL(location.href);
+    const q = u.searchParams;
+    const map = ['name','email','phone','checkin','checkout','room','address','notes','lang'];
+    map.forEach(k=>{
+      const el = f.elements[k];
+      if (el && q.get(k) !== null) el.value = q.get(k);
+    });
+    // auto-submit ถ้าครบฟิลด์หลัก
+    if (q.get('name') && q.get('email') && q.get('room') && q.get('checkin') && q.get('checkout')){
+      submitForm('GET'); // ใช้ GET ตรงตามลิงก์ของคุณ
+    }
+  }
+
+  async function submitForm(method='POST'){
     ok.style.display = 'none';
     err.style.display = 'none';
 
@@ -105,30 +164,92 @@
     }
 
     const data = Object.fromEntries(new FormData(f).entries());
-
     try{
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(data)
-      });
-      const j = await res.json();
-      if (j.ok){
-        ok.textContent = `ส่งคำขอสำเร็จ หมายเลข: ${j.billNo} ช่วงพัก: ${j.period}`;
-        ok.style.display = 'block';
-        f.reset();
-        window.scrollTo({top:0,behavior:'smooth'});
+      let res, j;
+      if (method === 'GET'){
+        const qs = new URLSearchParams(data).toString();
+        res = await fetch(API_URL + '?' + qs, { method:'GET' });
       }else{
-        throw new Error(j.error || 'เกิดข้อผิดพลาด');
+        res = await fetch(API_URL, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(data)
+        });
       }
+      j = await res.json();
+      if (!j.ok) throw new Error(j.error || 'API error');
+
+      // status
+      ok.textContent = `ส่งคำขอสำเร็จ หมายเลข: ${j.billNo} ช่วงพัก: ${j.period}`;
+      ok.style.display = 'block';
+
+      // show preview doc
+      showPreview(j);
+
+      // reset form เฉพาะกรณี POST
+      if (method === 'POST') f.reset();
+      window.scrollTo({top:0,behavior:'smooth'});
     }catch(e){
-      err.textContent = 'ไม่สามารถส่งคำขอ: ' + e.message + ' (ตรวจ API_URL หรือสิทธิ์การเข้าถึง)';
+      err.textContent = 'ไม่สามารถส่งคำขอ: ' + e.message + ' (ตรวจ API_URL / สิทธิ์ Web App / CORS)';
       err.style.display = 'block';
       window.scrollTo({top:0,behavior:'smooth'});
     }
-  });
+  }
+
+  function showPreview(j){
+    // เติมข้อมูลเอกสารยืนยัน
+    pv.id.textContent = j.billNo || '';
+    pv.name.textContent = (j.echo && j.echo.name) || '';
+    pv.room.textContent = (j.echo && j.echo.room) || '';
+    pv.period.textContent = j.period || '';
+    pv.email.textContent = (j.echo && j.echo.email) || '';
+    pv.phone.textContent = (j.echo && j.echo.phone) || '';
+    pv.lang.textContent = (j.echo && j.echo.lang) || '';
+    pv.address.textContent = (j.echo && j.echo.address) || '';
+    dlg.showModal();
+  }
+
+  // Actions
+  document.getElementById('btnClose').onclick = ()=> dlg.close();
+  document.getElementById('btnPrint').onclick = ()=> window.print();
+  document.getElementById('btnDownloadHtml').onclick = ()=>{
+    const html = `
+<!DOCTYPE html><meta charset="utf-8">
+<title>Reservation ${pv.id.textContent}</title>
+<style>
+  body{font-family:"TH Sarabun New",Arial,sans-serif;max-width:720px;margin:24px auto;line-height:1.6}
+  h2{margin:0 0 8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .box{border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0}
+  .muted{color:#666}
+</style>
+<h2>Reservation Confirmation</h2>
+<div class="grid">
+  <div><b>Resort:</b> Bernhardt Resort</div>
+  <div><b>Reservation ID:</b> ${pv.id.textContent}</div>
+  <div><b>Name:</b> ${pv.name.textContent}</div>
+  <div><b>Room:</b> ${pv.room.textContent}</div>
+  <div><b>Stay:</b> ${pv.period.textContent}</div>
+  <div><b>Email:</b> ${pv.email.textContent}</div>
+  <div><b>Phone:</b> ${pv.phone.textContent}</div>
+  <div><b>Lang:</b> ${pv.lang.textContent}</div>
+</div>
+<div class="box"><b>Invoice Address</b><br>${pv.address.textContent}</div>
+<p class="muted">Keep this file as your booking proof. A copy has been emailed to you.</p>
+`;
+    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Reservation_${pv.id.textContent||'booking'}.html`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  // Bind submit
+  f.addEventListener('submit', (e)=>{ e.preventDefault(); submitForm('POST'); });
+
+  // Autofill + auto-submit from URL (กรณีเปิดลิงก์แบบที่คุณส่งมา)
+  fillFormFromURL();
 </script>
 </body>
 </html>
-
-
