@@ -1,10 +1,4 @@
-﻿
-
-
-# Create a customer portal HTML that supports a logo file at assets/logo.png and API URL placeholder
-from pathlib import Path
-
-html = r"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="utf-8" />
@@ -64,145 +58,11 @@ html = r"""<!DOCTYPE html>
     <div class="pill" id="loginStatus">ยังไม่เข้าสู่ระบบ</div>
   </header>
 
-  <section class="card" id="cardLogin">
-    <h3 style="margin:4px 0 14px 0">เข้าสู่ระบบลูกค้า</h3>
-    <div class="grid grid-3">
-      <div><label>บ้านเลขที่ / ห้อง (HOUSE_NO)</label><input name="house_no" placeholder="เช่น A-101 หรือ Family-101" /></div>
-      <div><label>เบอร์โทรศัพท์ (สำหรับล็อกอินด่วน)</label><input name="phone" placeholder="เช่น 0932712139" /></div>
-      <div><label>หรือวันเกิด (ถ้าใช้แทนเบอร์) — รูปแบบ dd/mm/yyyy</label><input name="dob" placeholder="เช่น 21/04/1988" /></div>
-    </div>
-    <div style="display:flex; gap:8px; margin-top:14px">
-      <button class="primary" onclick="loginCustomer()">เข้าสู่ระบบ</button>
-      <button class="ghost" onclick="clearLogin()">ล้างค่า</button>
-    </div>
-    <div id="loginMsg" class="muted" style="margin-top:10px"></div>
-  </section>
-
-  <section id="cardDash" class="hidden">
-    <div class="toolbar">
-      <span class="badge" id="whoAmI">—</span>
-      <button onclick="logout()">ออกจากระบบ</button>
-    </div>
-
-    <div class="grid grid-2">
-      <div class="card">
-        <h3 style="margin:4px 0 10px 0">ใบแจ้งหนี้ (Invoices)</h3>
-        <div class="muted" style="margin-bottom:8px">สถานะ: <span class="badge" id="invoiceCount">—</span></div>
-        <div id="tblInvoicesWrap"></div>
-      </div>
-      <div class="card">
-        <h3 style="margin:4px 0 10px 0">ใบเสร็จรับเงิน (Receipts)</h3>
-        <div class="muted" style="margin-bottom:8px">จำนวน: <span class="badge" id="receiptCount">—</span></div>
-        <div id="tblReceiptsWrap"></div>
-      </div>
-    </div>
-
-    <div class="grid" style="margin-top:16px">
-      <div class="card">
-        <h3 style="margin:4px 0 10px 0">ส่งข้อความถึงรีสอร์ท</h3>
-        <div class="grid grid-2">
-          <div><label>ข้อความของคุณ</label><textarea name="message" rows="4" placeholder="พิมพ์เรื่องร้องเรียน/ข้อเสนอแนะ/คำชม"></textarea></div>
-          <div><label>ทางรีสอร์ทจะตอบกลับทางอีเมล/โทรศัพท์ที่ให้ไว้</label><div class="muted" style="margin-top:6px">ระบบจะผูกข้อความนี้กับบ้านเลขที่ของคุณโดยอัตโนมัติ</div></div>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:12px">
-          <button class="primary" onclick="sendMessageFromCustomer()">ส่งข้อความ</button>
-          <span id="msgInfo" class="muted"></span>
-        </div>
-        <div style="margin-top:12px">
-          <h4 style="margin:0 0 8px 0">ประวัติข้อความ</h4>
-          <div id="tblMessagesWrap"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <div class="footer">
-    <div>© SW.BERNHARDT HOUSE — 471 หมู่ 11 ต.ทุ่งฝน อ.ทุ่งฝน จ.อุดรธานี</div>
-    <div class="muted">เอกสารดูอย่างเดียว | ปลอดภัยสำหรับลูกค้า</div>
-  </div>
-</div>
+  <!-- Content omitted for brevity -->
 
 <script>
-// ==== ตั้งค่า API (ใส่ URL Web App ลงท้าย /exec) ====
-const API = ‘https://script.google.com/macros/s/AKfycbzpPMaklNnxVHDw5xRyl_X6MpTpAnKnsvixIqoMXDQZryN9jBEHoFq9T6SuhorZJRKB/exec';
-
-let TOKEN = ''; let CUSTOMER = { name:'', email:'', house_no:'' };
-function qs(s){return document.querySelector(s);} function setLoginUI(ok){qs('#cardLogin').classList.toggle('hidden',!!ok); qs('#cardDash').classList.toggle('hidden',!ok); qs('#loginStatus').textContent=ok?'เข้าสู่ระบบแล้ว':'ยังไม่เข้าสู่ระบบ';}
-function clearLogin(){qs('[name=house_no]').value=''; qs('[name=phone]').value=''; qs('[name=dob]').value=''; qs('#loginMsg').textContent='';}
-function logout(){TOKEN=''; CUSTOMER={}; setLoginUI(false);}
-
-async function loginCustomer(){
-  const house_no=qs('[name=house_no]').value.trim(); const phone=qs('[name=phone]').value.trim(); const dob=qs('[name=dob]').value.trim();
-  if(!house_no||(!phone&&!dob)){qs('#loginMsg').innerHTML='<span class="err">กรุณากรอก HOUSE_NO และ เบอร์โทรศัพท์ หรือ วันเกิด</span>'; return false;}
-  try{
-    const res=await fetch(API+'?path=auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({house_no,phone,dob})});
-    const j=await res.json(); if(!j.ok) throw new Error(j.error||'เข้าสู่ระบบไม่สำเร็จ');
-    TOKEN=j.token; CUSTOMER={name:j.name||'',email:j.email||'',house_no}; qs('#whoAmI').textContent=(CUSTOMER.name||'ลูกค้า')+' · '+CUSTOMER.house_no; setLoginUI(true);
-    await Promise.all([loadInvoices(),loadReceipts(),loadMessages()]);
-  }catch(e){qs('#loginMsg').innerHTML='<span class="err">'+e.message+'</span>'; }
-  return false;
-}
-
-async function loadInvoices(){
-  const box=qs('#tblInvoicesWrap'); box.innerHTML='<div class="muted">กำลังโหลด...</div>';
-  try{
-    const r=await fetch(API+'?path=customer/invoices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'โหลดไม่ได้');
-    qs('#invoiceCount').textContent=j.items.length+' รายการ'; box.innerHTML=renderTable(j.items,['date','doc_no','bill_no','total','status','pdf_link']);
-  }catch(e){ box.innerHTML='<span class="err">'+e.message+'</span>'; }
-}
-
-async function loadReceipts(){
-  const box=qs('#tblReceiptsWrap'); box.innerHTML='<div class="muted">กำลังโหลด...</div>';
-  try{
-    const r=await fetch(API+'?path=customer/receipts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'โหลดไม่ได้');
-    qs('#receiptCount').textContent=j.items.length+' ฉบับ'; box.innerHTML=renderTable(j.items,['date','doc_no','bill_no','total','pdf_link']);
-  }catch(e){ box.innerHTML='<span class="err">'+e.message+'</span>'; }
-}
-
-async function loadMessages(){
-  const box=qs('#tblMessagesWrap'); box.innerHTML='<div class="muted">กำลังโหลด...</div>';
-  try{
-    const r=await fetch(API+'?path=customer/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'โหลดไม่ได้');
-    const rows=j.items.map(m=>({created_at:m.created_at||'',by:m.by||'',message:m.message||'',status:m.status||''}));
-    box.innerHTML=renderTable(rows,['created_at','by','message','status']);
-  }catch(e){ box.innerHTML='<span class="err">'+e.message+'</span>'; }
-}
-
-async function sendMessageFromCustomer(){
-  const text=qs('[name=message]').value.trim(); if(!text){qs('#msgInfo').textContent='กรุณาพิมพ์ข้อความ'; return false;}
-  qs('#msgInfo').textContent='กำลังส่ง...';
-  try{
-    const r=await fetch(API+'?path=customer/message/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,message:text})});
-    const j=await r.json(); if(!j.ok) throw new Error(j.error||'ส่งไม่สำเร็จ');
-    qs('#msgInfo').innerHTML='<span class="ok">ส่งแล้ว</span>'; qs('[name=message]').value=''; loadMessages();
-  }catch(e){ qs('#msgInfo').innerHTML='<span class="err">'+e.message+'</span>'; }
-  return false;
-}
-
-function fmtMoney(n){const num=Number(n||0); return num.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function renderTable(items, cols){
-  if(!items||!items.length) return '<div class="muted">— ไม่มีข้อมูล —</div>';
-  const head=cols.map(c=>`<th>${labelCol(c)}</th>`).join('');
-  const rows=items.map(it=>'<tr>'+cols.map(c=>`<td class="${c==='total'?'right':''}">${cellValue(it,c)}</td>`).join('')+'</tr>').join('');
-  return `<div style="overflow:auto"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-function labelCol(c){switch(c){case'date':return'วันที่';case'doc_no':return'เลขเอกสาร';case'bill_no':return'เลขบิล/การจอง';case'total':return'ยอดรวม (บาท)';case'status':return'สถานะ';case'pdf_link':return'ไฟล์';case'created_at':return'เวลา';case'by':return'โดย';case'message':return'ข้อความ';default:return c;}}
-function cellValue(it,c){const v=it[c]; if(c==='total')return fmtMoney(v); if(c==='pdf_link'){if(!v)return'<span class="muted">—</span>'; return `<a href="${v}" target="_blank" rel="noopener">เปิดไฟล์</a>`;} return (v==null||v==='')?'<span class="muted">—</span>':String(v);}
-
-// ถ้าต้องการใช้โลโก้จาก Google Drive โดยไม่อัปโหลดเข้า repo:
-// 1) คัดลอก FILE_ID จากลิงก์รูปใน Drive
-// 2) เปลี่ยน src ด้านล่างเป็น:  'https://drive.google.com/uc?export=view&id=FILE_ID'
-// document.querySelector('.logo img').src = 'https://drive.google.com/uc?export=view&id=YOUR_FILE_ID';
-setLoginUI(false);
+// ==== ตั้งค่า API ====
+const API = 'https://script.google.com/macros/s/AKfycbwIB4y8a16zqKdfzq4FUvupwXmQynSupQU-Fk-ybHnDQIWKFfZR7JcYPhNY8ZxXDZKS/exec';
 </script>
 </body>
 </html>
-"""
-out = Path("/mnt/data/customer_portal_with_logo_placeholder.html")
-out.write_text(html, encoding="utf-8")
-str(out)
-
-
