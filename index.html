@@ -1,255 +1,208 @@
-<!DOCTYPE html>
+﻿
+
+
+# Create a customer portal HTML that supports a logo file at assets/logo.png and API URL placeholder
+from pathlib import Path
+
+html = r"""<!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>จองที่พัก | Bernhardt Resort</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>พอร์ทัลลูกค้า | SW.BERNHARDT HOUSE</title>
 <style>
-  :root{--gap:12px}
-  body{font-family:system-ui,Arial,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;background:#fafafa;color:#222}
-  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  h1{margin:0;font-size:24px}
-  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:16px}
-  label{display:block;margin:10px 0 4px;font-weight:600}
-  input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
-  input:focus,select:focus,textarea:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.15)}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
-  button{margin-top:14px;padding:12px 16px;border:0;border-radius:10px;cursor:pointer;background:#1a73e8;color:#fff;font-weight:700}
-  .ok{background:#e6f4ea;border:1px solid #a8dab5;color:#196127;padding:10px;border-radius:10px;margin:12px 0;display:none}
-  .err{background:#fdecea;border:1px solid #f5c2c0;color:#b00020;padding:10px;border-radius:10px;margin:12px 0;display:none}
-  dialog{width:100%;max-width:720px;border:0;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.25)}
-  dialog::backdrop{background:rgba(0,0,0,.35)}
-  .doc{font-family:"TH Sarabun New",system-ui,Arial,sans-serif;line-height:1.5}
-  .doc h2{margin:0 0 8px}
-  .doc .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:15px}
-  .doc .box{border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:8px 0;background:#fff}
-  .doc .muted{color:#6b7280;font-size:14px}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  :root{
+    --bg:#0f172a; --card:#111827; --muted:#94a3b8; --text:#e5e7eb;
+    --accent:#22c55e; --accent-2:#06b6d4; --danger:#ef4444; --border:#1f2937; --link:#60a5fa;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", "Noto Sans", Arial, "TH Sarabun New", sans-serif;
+    background: radial-gradient(1200px 700px at 10% -10%, rgba(34,197,94,.1), transparent),
+                radial-gradient(1000px 600px at 110% 10%, rgba(6,182,212,.09), transparent), var(--bg);
+    color:var(--text);}
+  .wrap{max-width:980px; margin:32px auto; padding:16px;}
+  header{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .logo{
+    width:48px; height:48px; border-radius:12px; overflow:hidden;
+    background: linear-gradient(145deg, rgba(34,197,94,.9), rgba(6,182,212,.9));
+    display:grid; place-items:center; box-shadow: 0 10px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.15);
+  }
+  .logo img{width:100%; height:100%; object-fit:cover; display:block}
+  .brand h1{margin:0; font-size:1.1rem; letter-spacing:.2px;}
+  .card{background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+    border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25); backdrop-filter: blur(4px);}
+  .grid{display:grid; gap:16px}
+  @media (min-width: 960px){ .grid-2{grid-template-columns: 1fr 1fr;} .grid-3{grid-template-columns: 1fr 1fr 1fr;} }
+  label{display:block; font-size:.92rem; color:var(--muted); margin-bottom:6px}
+  input, select, textarea{width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:#0b1220; color:var(--text); outline:none;}
+  input:focus, textarea:focus{border-color:#334155; box-shadow:0 0 0 3px rgba(6,182,212,.15)}
+  button{padding:12px 16px; border-radius:12px; border:1px solid var(--border); background: linear-gradient(180deg, rgba(34,197,94,.12), rgba(34,197,94,.05)); color:var(--text); cursor:pointer; font-weight:600;}
+  button.primary{ background: linear-gradient(180deg, rgba(34,197,94,.35), rgba(34,197,94,.18)); }
+  button.ghost{ background: transparent; }
+  button:disabled{ opacity:.6; cursor:not-allowed }
+  .toolbar{display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-bottom:8px}
+  .pill{display:inline-flex; padding:6px 10px; border-radius:999px; background:#0b1220; border:1px solid var(--border); color:var(--muted); font-size:.85rem}
+  .muted{color:var(--muted)} .ok{color:var(--accent)} .warn{color:#f59e0b} .err{color:var(--danger)}
+  table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:14px; border:1px solid var(--border)}
+  th, td{ padding:10px 12px; text-align:left; border-bottom:1px dashed #1e293b } th{ color:#cbd5e1; font-weight:600; background:#0b1220 }
+  tr:hover td{ background:rgba(255,255,255,.02) } a{ color:var(--link); text-decoration:none } a:hover{ text-decoration:underline }
+  .right{ text-align:right } .center{ text-align:center } .footer{margin-top:20px; color:var(--muted); font-size:.9rem; display:flex; gap:12px; align-items:center; justify-content:space-between}
+  .badge{ padding:6px 10px; border-radius:10px; border:1px solid var(--border); background:#0b1220; font-size:.85rem } .hidden{display:none !important}
 </style>
 </head>
 <body>
+<div class="wrap">
   <header>
-    <h1>จองที่พัก | Bernhardt Resort</h1>
-    <div id="status" style="font-size:12px;color:#6b7280"></div>
-  </header>
-
-  <div class="card">
-    <div id="ok" class="ok"></div>
-    <div id="err" class="err"></div>
-
-    <form id="f" novalidate>
-      <label>ชื่อ-นามสกุล *</label>
-      <input name="name" required>
-
-      <label>อีเมล *</label>
-      <input type="email" name="email" required>
-
-      <label>โทรศัพท์</label>
-      <input name="phone">
-
-      <div class="row">
-        <div>
-          <label>เช็คอิน *</label>
-          <input type="date" name="checkin" required>
-        </div>
-        <div>
-          <label>เช็คเอาท์ *</label>
-          <input type="date" name="checkout" required>
-        </div>
-      </div>
-
-      <label>ห้อง/ประเภท *</label>
-      <select name="room" required>
-        <option value="">-- เลือก --</option>
-        <option>Standard A</option>
-        <option>Standard B</option>
-        <option>Deluxe</option>
-        <option>Family</option>
-      </select>
-
-      <label>ที่อยู่ (สำหรับออกใบเสร็จ)</label>
-      <textarea name="address" rows="3"></textarea>
-
-      <label>หมายเหตุ</label>
-      <textarea name="notes" rows="3"></textarea>
-
-      <label>ภาษาอีเมลตอบรับ</label>
-      <select name="lang">
-        <option value="th">ไทย (TH)</option>
-        <option value="en" selected>English (EN)</option>
-      </select>
-
-      <button type="submit">ส่งคำขอจอง</button>
-    </form>
-  </div>
-
-  <dialog id="preview">
-    <div class="doc">
-      <h2>Reservation Confirmation</h2>
-      <div class="meta">
-        <div><b>Resort:</b> Bernhardt Resort</div>
-        <div><b>Reservation ID:</b> <span id="pv-id"></span></div>
-        <div><b>Name:</b> <span id="pv-name"></span></div>
-        <div><b>Room:</b> <span id="pv-room"></span></div>
-        <div><b>Stay:</b> <span id="pv-period"></span></div>
-        <div><b>Email:</b> <span id="pv-email"></span></div>
-        <div><b>Phone:</b> <span id="pv-phone"></span></div>
-        <div><b>Lang:</b> <span id="pv-lang"></span></div>
-      </div>
-      <div class="box">
-        <b>Invoice Address</b><br>
-        <span id="pv-address"></span>
-      </div>
-      <div class="muted">Please keep this confirmation as proof of reservation. A copy has been emailed to you. The resort has also received your booking.</div>
-
-      <div class="actions">
-        <button id="btnPrint">Print / Save as PDF</button>
-        <button id="btnDownloadHtml">Download HTML</button>
-        <button id="btnClose">Close</button>
+    <div class="brand">
+      <div class="logo"><img src="assets/logo.png" alt="SW.BERNHARDT HOUSE Logo" onerror="this.parentElement.textContent='SW'"></div>
+      <div>
+        <h1>SW.BERNHARDT HOUSE · พอร์ทัลลูกค้า</h1>
+        <div class="muted">ดูบิล/ใบเสร็จ & ส่งข้อความถึงรีสอร์ทได้ที่นี่</div>
       </div>
     </div>
-  </dialog>
+    <div class="pill" id="loginStatus">ยังไม่เข้าสู่ระบบ</div>
+  </header>
 
-  <footer style="margin:24px 0;color:#6b7280;font-size:12px;text-align:center">
-    © <span id="y"></span> Bernhardt Resort · Powered by GitHub Pages & Google Apps Script
-  </footer>
+  <section class="card" id="cardLogin">
+    <h3 style="margin:4px 0 14px 0">เข้าสู่ระบบลูกค้า</h3>
+    <div class="grid grid-3">
+      <div><label>บ้านเลขที่ / ห้อง (HOUSE_NO)</label><input name="house_no" placeholder="เช่น A-101 หรือ Family-101" /></div>
+      <div><label>เบอร์โทรศัพท์ (สำหรับล็อกอินด่วน)</label><input name="phone" placeholder="เช่น 0932712139" /></div>
+      <div><label>หรือวันเกิด (ถ้าใช้แทนเบอร์) — รูปแบบ dd/mm/yyyy</label><input name="dob" placeholder="เช่น 21/04/1988" /></div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:14px">
+      <button class="primary" onclick="loginCustomer()">เข้าสู่ระบบ</button>
+      <button class="ghost" onclick="clearLogin()">ล้างค่า</button>
+    </div>
+    <div id="loginMsg" class="muted" style="margin-top:10px"></div>
+  </section>
+
+  <section id="cardDash" class="hidden">
+    <div class="toolbar">
+      <span class="badge" id="whoAmI">—</span>
+      <button onclick="logout()">ออกจากระบบ</button>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3 style="margin:4px 0 10px 0">ใบแจ้งหนี้ (Invoices)</h3>
+        <div class="muted" style="margin-bottom:8px">สถานะ: <span class="badge" id="invoiceCount">—</span></div>
+        <div id="tblInvoicesWrap"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:4px 0 10px 0">ใบเสร็จรับเงิน (Receipts)</h3>
+        <div class="muted" style="margin-bottom:8px">จำนวน: <span class="badge" id="receiptCount">—</span></div>
+        <div id="tblReceiptsWrap"></div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div class="card">
+        <h3 style="margin:4px 0 10px 0">ส่งข้อความถึงรีสอร์ท</h3>
+        <div class="grid grid-2">
+          <div><label>ข้อความของคุณ</label><textarea name="message" rows="4" placeholder="พิมพ์เรื่องร้องเรียน/ข้อเสนอแนะ/คำชม"></textarea></div>
+          <div><label>ทางรีสอร์ทจะตอบกลับทางอีเมล/โทรศัพท์ที่ให้ไว้</label><div class="muted" style="margin-top:6px">ระบบจะผูกข้อความนี้กับบ้านเลขที่ของคุณโดยอัตโนมัติ</div></div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px">
+          <button class="primary" onclick="sendMessageFromCustomer()">ส่งข้อความ</button>
+          <span id="msgInfo" class="muted"></span>
+        </div>
+        <div style="margin-top:12px">
+          <h4 style="margin:0 0 8px 0">ประวัติข้อความ</h4>
+          <div id="tblMessagesWrap"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <div>© SW.BERNHARDT HOUSE — 471 หมู่ 11 ต.ทุ่งฝน อ.ทุ่งฝน จ.อุดรธานี</div>
+    <div class="muted">เอกสารดูอย่างเดียว | ปลอดภัยสำหรับลูกค้า</div>
+  </div>
+</div>
 
 <script>
-  // 🔧 ใส่ URL ของ Web App จากการ Deploy BookingAPI.gs (รุ่นใหม่ที่รองรับ GET/POST)
-  const API_URL = '<<PUT_WEB_APP_URL_HERE>>';
+// ==== ตั้งค่า API (ใส่ URL Web App ลงท้าย /exec) ====
+const API = ‘https://script.google.com/macros/s/AKfycbzpPMaklNnxVHDw5xRyl_X6MpTpAnKnsvixIqoMXDQZryN9jBEHoFq9T6SuhorZJRKB/exec';
 
-  const f = document.getElementById('f');
-  const ok = document.getElementById('ok');
-  const err = document.getElementById('err');
-  const statusEl = document.getElementById('status');
-  const yEl = document.getElementById('y'); yEl.textContent = new Date().getFullYear();
+let TOKEN = ''; let CUSTOMER = { name:'', email:'', house_no:'' };
+function qs(s){return document.querySelector(s);} function setLoginUI(ok){qs('#cardLogin').classList.toggle('hidden',!!ok); qs('#cardDash').classList.toggle('hidden',!ok); qs('#loginStatus').textContent=ok?'เข้าสู่ระบบแล้ว':'ยังไม่เข้าสู่ระบบ';}
+function clearLogin(){qs('[name=house_no]').value=''; qs('[name=phone]').value=''; qs('[name=dob]').value=''; qs('#loginMsg').textContent='';}
+function logout(){TOKEN=''; CUSTOMER={}; setLoginUI(false);}
 
-  const dlg = document.getElementById('preview');
-  const pv = {
-    id: document.getElementById('pv-id'),
-    name: document.getElementById('pv-name'),
-    room: document.getElementById('pv-room'),
-    period: document.getElementById('pv-period'),
-    email: document.getElementById('pv-email'),
-    phone: document.getElementById('pv-phone'),
-    lang: document.getElementById('pv-lang'),
-    address: document.getElementById('pv-address')
-  };
+async function loginCustomer(){
+  const house_no=qs('[name=house_no]').value.trim(); const phone=qs('[name=phone]').value.trim(); const dob=qs('[name=dob]').value.trim();
+  if(!house_no||(!phone&&!dob)){qs('#loginMsg').innerHTML='<span class="err">กรุณากรอก HOUSE_NO และ เบอร์โทรศัพท์ หรือ วันเกิด</span>'; return false;}
+  try{
+    const res=await fetch(API+'?path=auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({house_no,phone,dob})});
+    const j=await res.json(); if(!j.ok) throw new Error(j.error||'เข้าสู่ระบบไม่สำเร็จ');
+    TOKEN=j.token; CUSTOMER={name:j.name||'',email:j.email||'',house_no}; qs('#whoAmI').textContent=(CUSTOMER.name||'ลูกค้า')+' · '+CUSTOMER.house_no; setLoginUI(true);
+    await Promise.all([loadInvoices(),loadReceipts(),loadMessages()]);
+  }catch(e){qs('#loginMsg').innerHTML='<span class="err">'+e.message+'</span>'; }
+  return false;
+}
 
-  statusEl.textContent = (API_URL && API_URL.startsWith('http')) ? 'API: Configured' : 'API: NOT SET';
+async function loadInvoices(){
+  const box=qs('#tblInvoicesWrap'); box.innerHTML='<div class="muted">กำลังโหลด...</div>';
+  try{
+    const r=await fetch(API+'?path=customer/invoices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'โหลดไม่ได้');
+    qs('#invoiceCount').textContent=j.items.length+' รายการ'; box.innerHTML=renderTable(j.items,['date','doc_no','bill_no','total','status','pdf_link']);
+  }catch(e){ box.innerHTML='<span class="err">'+e.message+'</span>'; }
+}
 
-  function fillFormFromURL(){
-    const u = new URL(location.href);
-    const q = u.searchParams;
-    const map = ['name','email','phone','checkin','checkout','room','address','notes','lang'];
-    map.forEach(k=>{
-      const el = f.elements[k];
-      if (el && q.get(k) !== null) el.value = q.get(k);
-    });
-    // auto-submit ถ้าครบฟิลด์หลัก
-    if (q.get('name') && q.get('email') && q.get('room') && q.get('checkin') && q.get('checkout')){
-      submitForm('GET'); // ใช้ GET ตรงตามลิงก์ของคุณ
-    }
-  }
+async function loadReceipts(){
+  const box=qs('#tblReceiptsWrap'); box.innerHTML='<div class="muted">กำลังโหลด...</div>';
+  try{
+    const r=await fetch(API+'?path=customer/receipts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'โหลดไม่ได้');
+    qs('#receiptCount').textContent=j.items.length+' ฉบับ'; box.innerHTML=renderTable(j.items,['date','doc_no','bill_no','total','pdf_link']);
+  }catch(e){ box.innerHTML='<span class="err">'+e.message+'</span>'; }
+}
 
-  async function submitForm(method='POST'){
-    ok.style.display = 'none';
-    err.style.display = 'none';
+async function loadMessages(){
+  const box=qs('#tblMessagesWrap'); box.innerHTML='<div class="muted">กำลังโหลด...</div>';
+  try{
+    const r=await fetch(API+'?path=customer/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'โหลดไม่ได้');
+    const rows=j.items.map(m=>({created_at:m.created_at||'',by:m.by||'',message:m.message||'',status:m.status||''}));
+    box.innerHTML=renderTable(rows,['created_at','by','message','status']);
+  }catch(e){ box.innerHTML='<span class="err">'+e.message+'</span>'; }
+}
 
-    // basic validation
-    if (!f.checkValidity()){
-      err.textContent = 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน';
-      err.style.display = 'block';
-      return;
-    }
+async function sendMessageFromCustomer(){
+  const text=qs('[name=message]').value.trim(); if(!text){qs('#msgInfo').textContent='กรุณาพิมพ์ข้อความ'; return false;}
+  qs('#msgInfo').textContent='กำลังส่ง...';
+  try{
+    const r=await fetch(API+'?path=customer/message/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:TOKEN,message:text})});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||'ส่งไม่สำเร็จ');
+    qs('#msgInfo').innerHTML='<span class="ok">ส่งแล้ว</span>'; qs('[name=message]').value=''; loadMessages();
+  }catch(e){ qs('#msgInfo').innerHTML='<span class="err">'+e.message+'</span>'; }
+  return false;
+}
 
-    const data = Object.fromEntries(new FormData(f).entries());
-    try{
-      let res, j;
-      if (method === 'GET'){
-        const qs = new URLSearchParams(data).toString();
-        res = await fetch(API_URL + '?' + qs, { method:'GET' });
-      }else{
-        res = await fetch(API_URL, {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify(data)
-        });
-      }
-      j = await res.json();
-      if (!j.ok) throw new Error(j.error || 'API error');
+function fmtMoney(n){const num=Number(n||0); return num.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function renderTable(items, cols){
+  if(!items||!items.length) return '<div class="muted">— ไม่มีข้อมูล —</div>';
+  const head=cols.map(c=>`<th>${labelCol(c)}</th>`).join('');
+  const rows=items.map(it=>'<tr>'+cols.map(c=>`<td class="${c==='total'?'right':''}">${cellValue(it,c)}</td>`).join('')+'</tr>').join('');
+  return `<div style="overflow:auto"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function labelCol(c){switch(c){case'date':return'วันที่';case'doc_no':return'เลขเอกสาร';case'bill_no':return'เลขบิล/การจอง';case'total':return'ยอดรวม (บาท)';case'status':return'สถานะ';case'pdf_link':return'ไฟล์';case'created_at':return'เวลา';case'by':return'โดย';case'message':return'ข้อความ';default:return c;}}
+function cellValue(it,c){const v=it[c]; if(c==='total')return fmtMoney(v); if(c==='pdf_link'){if(!v)return'<span class="muted">—</span>'; return `<a href="${v}" target="_blank" rel="noopener">เปิดไฟล์</a>`;} return (v==null||v==='')?'<span class="muted">—</span>':String(v);}
 
-      // status
-      ok.textContent = `ส่งคำขอสำเร็จ หมายเลข: ${j.billNo} ช่วงพัก: ${j.period}`;
-      ok.style.display = 'block';
-
-      // show preview doc
-      showPreview(j);
-
-      // reset form เฉพาะกรณี POST
-      if (method === 'POST') f.reset();
-      window.scrollTo({top:0,behavior:'smooth'});
-    }catch(e){
-      err.textContent = 'ไม่สามารถส่งคำขอ: ' + e.message + ' (ตรวจ API_URL / สิทธิ์ Web App / CORS)';
-      err.style.display = 'block';
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-  }
-
-  function showPreview(j){
-    // เติมข้อมูลเอกสารยืนยัน
-    pv.id.textContent = j.billNo || '';
-    pv.name.textContent = (j.echo && j.echo.name) || '';
-    pv.room.textContent = (j.echo && j.echo.room) || '';
-    pv.period.textContent = j.period || '';
-    pv.email.textContent = (j.echo && j.echo.email) || '';
-    pv.phone.textContent = (j.echo && j.echo.phone) || '';
-    pv.lang.textContent = (j.echo && j.echo.lang) || '';
-    pv.address.textContent = (j.echo && j.echo.address) || '';
-    dlg.showModal();
-  }
-
-  // Actions
-  document.getElementById('btnClose').onclick = ()=> dlg.close();
-  document.getElementById('btnPrint').onclick = ()=> window.print();
-  document.getElementById('btnDownloadHtml').onclick = ()=>{
-    const html = `
-<!DOCTYPE html><meta charset="utf-8">
-<title>Reservation ${pv.id.textContent}</title>
-<style>
-  body{font-family:"TH Sarabun New",Arial,sans-serif;max-width:720px;margin:24px auto;line-height:1.6}
-  h2{margin:0 0 8px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .box{border:1px solid #ddd;border-radius:8px;padding:10px;margin:8px 0}
-  .muted{color:#666}
-</style>
-<h2>Reservation Confirmation</h2>
-<div class="grid">
-  <div><b>Resort:</b> Bernhardt Resort</div>
-  <div><b>Reservation ID:</b> ${pv.id.textContent}</div>
-  <div><b>Name:</b> ${pv.name.textContent}</div>
-  <div><b>Room:</b> ${pv.room.textContent}</div>
-  <div><b>Stay:</b> ${pv.period.textContent}</div>
-  <div><b>Email:</b> ${pv.email.textContent}</div>
-  <div><b>Phone:</b> ${pv.phone.textContent}</div>
-  <div><b>Lang:</b> ${pv.lang.textContent}</div>
-</div>
-<div class="box"><b>Invoice Address</b><br>${pv.address.textContent}</div>
-<p class="muted">Keep this file as your booking proof. A copy has been emailed to you.</p>
-`;
-    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Reservation_${pv.id.textContent||'booking'}.html`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-
-  // Bind submit
-  f.addEventListener('submit', (e)=>{ e.preventDefault(); submitForm('POST'); });
-
-  // Autofill + auto-submit from URL (กรณีเปิดลิงก์แบบที่คุณส่งมา)
-  fillFormFromURL();
+// ถ้าต้องการใช้โลโก้จาก Google Drive โดยไม่อัปโหลดเข้า repo:
+// 1) คัดลอก FILE_ID จากลิงก์รูปใน Drive
+// 2) เปลี่ยน src ด้านล่างเป็น:  'https://drive.google.com/uc?export=view&id=FILE_ID'
+// document.querySelector('.logo img').src = 'https://drive.google.com/uc?export=view&id=YOUR_FILE_ID';
+setLoginUI(false);
 </script>
 </body>
 </html>
+"""
+out = Path("/mnt/data/customer_portal_with_logo_placeholder.html")
+out.write_text(html, encoding="utf-8")
+str(out)
+
+
